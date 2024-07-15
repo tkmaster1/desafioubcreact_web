@@ -1,13 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { createRef, useState, useEffect, useCallback } from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
 import axios from 'axios';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import moment from 'moment'
+import InputMask from 'react-input-mask';
 
 function App() {
 
+  const [error, setError] = useState('');
   const [modalInclude, setModalInclude] = useState(false);
   const [modalEdit, setModalEdit] = useState(false);
   const [modalDelete, setModalDelete] = useState(false);
@@ -18,7 +20,7 @@ function App() {
   const baseUrl = "https://localhost:44392/api/Students/";
 
   const [dataStudants, setData] = useState([]);
-  const fetchData = React.useCallback(() => {
+  const fetchData = useCallback(() => {
     axios({
       "method": "GET",
       "url": baseUrl + 'listall',
@@ -46,8 +48,6 @@ function App() {
 
   //#region Inclusão
 
-  // const [modalIncluir, setModalIncluir] = useState(false);
-
   const [objStudent, setStudentSelected] = useState({
     code: 0,
     name: "",
@@ -65,6 +65,14 @@ function App() {
     setStudentSelected({
       ...objStudent, [name]: value
     });
+
+    // // Validate if the input is not empty
+    // if (!value.trim()) {
+    //   setError('This field is required.');
+    // } else {
+    //   setError('');
+    // }
+
     console.log(objStudent);
   }
 
@@ -74,21 +82,37 @@ function App() {
     setModalInclude(!modalInclude);
   }
 
-  const requestPost = async () => {
+  const saveNewStudents = async () => {
     delete objStudent.code;
     objStudent.name = objStudent.name;
     objStudent.age = parseInt(objStudent.age);
     objStudent.series = parseInt(objStudent.series);
 
-    console.log(objStudent);
+    var dateObject = formatDate(objStudent.dateBirth)
+    // console.log(dateObject)
+    objStudent.dateBirth = dateObject;
+    // console.log(objStudent);
 
     await axios.post(baseUrl + 'include', objStudent)
       .then(response => {
         setData(dataStudants.concat(response.data));
+        fetchData();
         openCloseModalInclude();
       }).catch(error => {
         console.log(error);
       })
+  }
+
+  function formatDate(date) {
+    var d = new Date(date),
+      month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
+
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+
+    return [year, day, month].join('-');
   }
 
   //#endregion
@@ -101,17 +125,65 @@ function App() {
     setModalEdit(!modalEdit);
   }
 
-  const getStudant = (studant, caso) => {
+  const getStudant = (studant, oper) => {
     setStudentSelected(studant);
-    (caso === "Editar") ?
+    (oper === "Editar") ?
       openCloseModalEdit() : openCloseModalDelete();
+  }
+
+  const saveChangeStudents = async () => {
+    objStudent.name = objStudent.name;
+    objStudent.age = parseInt(objStudent.age);
+    objStudent.series = parseInt(objStudent.series);
+
+    await axios.put(baseUrl + 'edit', objStudent)
+      .then(response => {
+        var resposta = response.data;
+        var dadosAuxiliar = dataStudants;
+
+        dadosAuxiliar.map(stu => {
+          if (stu.code === objStudent.code) {
+            stu.name = resposta.name;
+            stu.age = resposta.age;
+            stu.averageGrade = resposta.averageGrade;
+            stu.address = resposta.address;
+            stu.fatherName = resposta.fatherName;
+            stu.motherName = resposta.motherName;
+            stu.dateBirth = resposta.dateBirth;
+          }
+
+          fetchData();
+
+        });
+
+        openCloseModalEdit();
+      }).catch(error => {
+        console.log(error);
+      })
   }
 
   //#endregion
 
+  //#region Exclusão
+
+  const toggleDelete = () => setModalDelete(!modalDelete);
+
   const openCloseModalDelete = () => {
     setModalDelete(!modalDelete);
   }
+
+  const saveRemoveStudents = async () => {
+    await axios.delete(baseUrl + 'delete/' + objStudent.code)
+      .then(response => {
+        setData(dataStudants.filter(stu => stu.code !== response.data));
+        fetchData();
+        openCloseModalDelete();
+      }).catch(error => {
+        console.log(error);
+      })
+  }
+
+  //#endregion
 
   return (
     <div className="content-wrapper">
@@ -135,19 +207,19 @@ function App() {
       {/* /.content-header */}
       <section className="content">
         <div className="container-fluid">
-          <div class="card-header alert-dark">
-            <h3 class="card-title">
-              <i class="bi bi-list-check"></i>&nbsp;
+          <div className="card-header alert-dark">
+            <h3 className="card-title">
+              <i className="bi bi-list-check"></i>&nbsp;
               Resultados
             </h3>
-            <div class="card-tools">
-              <a href="#" onClick={() => openCloseModalInclude()} data-bs-toggle="modal" class="btn btn-success btn-sm">
-                <i class="bi bi-plus-square" data-bs-toggle="tooltip" title="Incluir Estudante"></i>
+            <div className="card-tools">
+              <a href="#" onClick={() => openCloseModalInclude()} data-bs-toggle="modal" className="btn btn-success btn-sm">
+                <i className="bi bi-plus-square" data-bs-toggle="tooltip" title="Incluir Estudante"></i>
               </a>
             </div><br />
           </div>
           <br />
-          <table class="table table-bordered">
+          <table className="table table-bordered">
             <thead>
               <tr>
                 <th scope="col">#</th>
@@ -173,112 +245,114 @@ function App() {
                   <td>{stu?.address}</td>
                   <td>{stu?.fatherName}</td>
                   <td>{stu?.motherName}</td>
-                  <td>{moment(stu.dateBirth).format("DD/MM/yyyy")}</td>
+                  <td>{moment(stu.dateBirth).format("DD/MM/YYYY")}</td>
                   <td>
-                    <a href="#" onClick={() => getStudant(stu, "Editar")} class="btn btn-primary btn-sm" role="button" data-bs-toggle="button"><i class="bi bi-pencil-square"></i></a>
-                    <a href="#" class="btn btn-danger btn-sm" role="button" data-bs-toggle="button"><i class="bi bi-trash"></i></a>
+                    <a href="#" onClick={() => getStudant(stu, "Editar")} className="btn btn-primary btn-sm" role="button" data-bs-toggle="button"><i className="bi bi-pencil-square"></i></a>
+                    <a href="#" onClick={() => getStudant(stu, "Excluir")} className="btn btn-danger btn-sm" role="button" data-bs-toggle="button"><i className="bi bi-trash"></i></a>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
 
-          {/* Modal  */}
+          {/* Modal Incluir */}
           <Modal isOpen={modalInclude} size="lg"
             aria-labelledby="example-custom-modal-styling-title"
             data-bs-backdrop="static" data-bs-keyboard="false">
-            <ModalHeader toggle={toggle}><i class="bi bi-person-fill-add"></i>&nbsp;Cadastrar Estudante</ModalHeader>
+            <ModalHeader className="modal-header alert alert-dark" toggle={toggle}>
+              <i className="bi bi-person-fill-add"></i>&nbsp;Cadastrar Estudante
+            </ModalHeader>
             <ModalBody>
               <div className="form-group">
-                <div class="row">
-                  <div class="col-md-8 mb-3">
-                    <label class="form-label">Nome <span class="text-danger">*</span></label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <div class="input-group ">
-                          <input type="text" class="form-control" placeholder="Nome" name="name" onChange={handleChange} minLength="2" maxlength="256" required />
+                <div className="row">
+                  <div className="col-md-8 mb-3">
+                    <label className="form-label">Nome <span className="text-danger">*</span></label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <div className="input-group ">
+                          <input type="text" className="form-control" placeholder="Nome" name="name" onChange={handleChange} minLength="2" maxLength="256" required />
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div class="col-md-4 mb-3">
-                    <label class="form-label">Idade <span class="text-danger">*</span></label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <div class="input-group input-daterange " id="dataInclusaoNoticiaDiv">
-                          <input type="number" class="form-control" placeholder="Idade" name="age" onChange={handleChange} min="1" required />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label">Série</label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <input type="number" class="form-control " placeholder="Série" name="series" onChange={handleChange} />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label">Nota média</label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <input type="number" class="form-control " placeholder="nota média" step="0.01" name="averageGrade" onChange={handleChange} />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div class="row">
-                  <div class="col-md-8 mb-3">
-                    <label class="form-label">Endereço</label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <div class="input-group ">
-                          <input type="text" class="form-control" placeholder="Endereço" name="address" onChange={handleChange} maxlength="1000" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="col-md-4 mb-3">
-                    <label class="form-label">Data de nascimento <span class="text-danger">*</span></label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <div class="input-group input-daterange " id="dataNascimentoStudentsDiv">
-                          <input type="text" class="form-control data" name="dateBirth" placeholder="Data de nascimento"
-                            id="dataNascimentoStudentsRef"
-                            data-maska="##/##/####" minLength="10"
-                            maxlength="10" onChange={handleChange} required />
-                          <label class="input-group-text" ><i class="bi bi-calendar-fill"></i></label>
-
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label">Idade <span className="text-danger">*</span></label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <div className="input-group input-daterange " id="dataInclusaoNoticiaDiv">
+                          <input type="number" className="form-control" placeholder="Idade" name="age" onChange={handleChange} min="1" required />
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label">Nome do pai</label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <input type="text" class="form-control" placeholder="Nome do pai" name="fatherName" onChange={handleChange} minLength="2" maxlength="256" />
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Série</label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <input type="number" className="form-control " placeholder="Série" name="series" onChange={handleChange} />
                       </div>
                     </div>
                   </div>
 
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label">Nome da mãe</label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <div class="input-group ">
-                          <input type="text" class="form-control" placeholder="Nome da mãe" name="motherName" onChange={handleChange} maxlength="256" />
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Nota média</label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <input type="number" className="form-control " placeholder="nota média" step="0.01" name="averageGrade" onChange={handleChange} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
+                <div className="row">
+                  <div className="col-md-8 mb-3">
+                    <label className="form-label">Endereço</label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <div className="input-group ">
+                          <input type="text" className="form-control" placeholder="Endereço" name="address" onChange={handleChange} maxLength="1000" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label">Data de nascimento <span className="text-danger">*</span></label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <div className="input-group input-daterange " id="dataNascimentoStudentsDiv">
+                          <InputMask className="form-control data"
+                            mask="99/99/9999"
+                            // maskChar="mm/dd/yyyy"
+                            placeholder="99/99/9999"
+                            onChange={handleChange}
+                            name="dateBirth" />
+                          <label className="input-group-text"><i className="bi bi-calendar-fill"></i></label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Nome do pai</label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <input type="text" className="form-control" placeholder="Nome do pai" name="fatherName" onChange={handleChange} minLength="2" maxLength="256" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Nome da mãe</label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <div className="input-group ">
+                          <input type="text" className="form-control" placeholder="Nome da mãe" name="motherName" onChange={handleChange} maxLength="256" />
                         </div>
                       </div>
                     </div>
@@ -289,108 +363,118 @@ function App() {
 
             </ModalBody>
             <ModalFooter>
-              <button className="btn btn-primary" onClick={() => requestPost()}>Incluir</button>{"   "}
+              <button className="btn btn-primary" onClick={() => saveNewStudents()}>Incluir</button>{"   "}
               <button className="btn btn-danger" onClick={() => openCloseModalInclude()}>Cancelar</button>
             </ModalFooter>
           </Modal>
 
+          {/* Modal Editar */}
           <Modal isOpen={modalEdit} size="lg"
             aria-labelledby="example-custom-modal-styling-title"
             data-bs-backdrop="static" data-bs-keyboard="false">
-            <ModalHeader toggle={toggleEdit}><i class="bi bi-person-fill-check"></i>&nbsp;Editar Estudante</ModalHeader>
+            <ModalHeader className="modal-header alert alert-dark" toggle={toggleEdit}>
+              <i className="bi bi-person-fill-check"></i>&nbsp;Editar Estudante
+            </ModalHeader>
             <ModalBody>
               <div className="form-group">
                 <input type="hidden" name="code" onChange={handleChange}
                   value={objStudent && objStudent.code} required />
-                <div class="row">
-                  <div class="col-md-8 mb-3">
-                    <label class="form-label">Nome <span class="text-danger">*</span></label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <div class="input-group ">
-                          <input type="text" class="form-control" placeholder="Nome" name="name" minLength="2" maxlength="256" onChange={handleChange}
+                <div className="row">
+                  <div className="col-md-8 mb-3">
+                    <label className="form-label">Nome <span className="text-danger">*</span></label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <div className="input-group ">
+                          <input type="text" className="form-control" placeholder="Nome" name="name" minLength="2" maxLength="256" onChange={handleChange}
                             value={objStudent && objStudent.name} required />
                         </div>
                       </div>
                     </div>
                   </div>
-                  <div class="col-md-4 mb-3">
-                    <label class="form-label">Idade <span class="text-danger">*</span></label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <div class="input-group input-daterange " id="dataInclusaoNoticiaDiv">
-                          <input type="number" class="form-control" placeholder="Idade" name="age" onChange={handleChange} min="1" value={objStudent && objStudent.age} required />
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label">Idade <span className="text-danger">*</span></label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <div className="input-group input-daterange " id="dataInclusaoNoticiaDiv">
+                          <input type="number" className="form-control" placeholder="Idade" name="age" onChange={handleChange} min="1" value={objStudent && objStudent.age} required />
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label">Série</label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <input type="number" class="form-control " placeholder="Série" name="series" onChange={handleChange} value={objStudent && objStudent.series} />
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Série</label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <input type="number" className="form-control " placeholder="Série" name="series" onChange={handleChange} value={objStudent && objStudent.series} />
                       </div>
                     </div>
                   </div>
 
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label">Nota média</label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <input type="number" class="form-control " placeholder="nota média" step="0.01" name="averageGrade" onChange={handleChange}
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Nota média</label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <input type="number" className="form-control " placeholder="nota média" step="0.01" name="averageGrade" onChange={handleChange}
                           value={objStudent && objStudent.averageGrade} />
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div class="row">
-                  <div class="col-md-8 mb-3">
-                    <label class="form-label">Endereço</label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <div class="input-group ">
-                          <input type="text" class="form-control" placeholder="Endereço" name="address" onChange={handleChange} value={objStudent && objStudent.address} />
+                <div className="row">
+                  <div className="col-md-8 mb-3">
+                    <label className="form-label">Endereço</label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <div className="input-group ">
+                          <input type="text" className="form-control" placeholder="Endereço" name="address" onChange={handleChange} value={objStudent && objStudent.address} />
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  <div class="col-md-4 mb-3">
-                    <label class="form-label">Data de nascimento <span class="text-danger">*</span></label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <div class="input-group input-daterange " id="dataNascimentoStudentsDiv">
-                          <input type="text" class="form-control data" name="dateBirth" placeholder="Data de nascimento"
-                            id="dataNascimentoStudentsRef"
-                            data-maska="##/##/####" onChange={handleChange} value={objStudent && objStudent.dateBirth} required />
-                          <label class="input-group-text" ><i class="bi bi-calendar-fill"></i></label>
+                  <div className="col-md-4 mb-3">
+                    <label className="form-label">Data de nascimento <span className="text-danger">*</span></label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <div className="input-group input-daterange " id="dataNascimentoStudentsDiv">
+                          <InputMask className="form-control data"
+                            mask="99/99/9999"
+                            placeholder="99/99/9999"
+                            value={objStudent ? moment(objStudent.dateBirth).format("DD/MM/YYYY") : ''}
+                            onChange={handleChange}
+                            name="dateBirth"
+                            slotChar="dd/mm/yyyy" preserveMask required />
 
+                          {/* <input type="text" className="form-control data" name="dateBirth" placeholder="Data de nascimento"
+                            id="dataNascimentoStudentsRef"  objStudent && moment(objStudent.dateBirth).format("DD/MM/YYYY")
+                            maska="##/##/####" onChange={handleChange} value={objStudent && objStudent.dateBirth} required /> */}
+                          <label className="input-group-text" ><i className="bi bi-calendar-fill"></i></label>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div class="row">
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label">Nome do pai</label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <input type="text" class="form-control" placeholder="Nome do pai" name="fatherName" onChange={handleChange} value={objStudent && objStudent.fatherName} />
+                <div className="row">
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Nome do pai</label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <input type="text" className="form-control" placeholder="Nome do pai" name="fatherName" onChange={handleChange} value={objStudent && objStudent.fatherName} />
                       </div>
                     </div>
                   </div>
 
-                  <div class="col-md-6 mb-3">
-                    <label class="form-label">Nome da mãe</label>
-                    <div class="row row-space-10">
-                      <div class="col-12" >
-                        <div class="input-group ">
-                          <input type="text" class="form-control" placeholder="Nome da mãe" name="motherName" onChange={handleChange} value={objStudent && objStudent.motherName} />
+                  <div className="col-md-6 mb-3">
+                    <label className="form-label">Nome da mãe</label>
+                    <div className="row row-space-10">
+                      <div className="col-12" >
+                        <div className="input-group ">
+                          <input type="text" className="form-control" placeholder="Nome da mãe" name="motherName" onChange={handleChange} value={objStudent && objStudent.motherName} />
                         </div>
                       </div>
                     </div>
@@ -398,14 +482,31 @@ function App() {
                 </div>
 
               </div>
-
             </ModalBody>
             <ModalFooter>
-              <button className="btn btn-primary" onClick={() => requestPost()}>Salvar</button>{"   "}
+              <button className="btn btn-primary" onClick={() => saveChangeStudents()}>Salvar</button>{"   "}
               <button className="btn btn-danger" onClick={() => openCloseModalEdit()}>Cancelar</button>
             </ModalFooter>
           </Modal>
-        </div>{/* /.container-fluid */}
+
+          {/* Modal Excluir */}
+          <Modal isOpen={modalDelete}>
+            <ModalHeader className="modal-header alert alert-dark" toggle={toggleDelete}>
+              <h5 className="modal-title"> <i className="bi bi-person-x"></i>&nbsp;Excluir Estudante</h5>
+            </ModalHeader>
+            <ModalBody>
+              <div className="alert alert-muted">
+                <b>Atenção!</b><br />
+                Tem certeza que deseja excluir o Estudante: <strong>{objStudent && objStudent.name}</strong>?
+              </div>
+            </ModalBody>
+            <ModalFooter>
+              <button type="button" className="btn btn-secondary" onClick={() => openCloseModalDelete()} >Fechar</button>
+              <button type="button" className="btn btn-danger" onClick={() => saveRemoveStudents()}>Excluir</button>
+            </ModalFooter>
+          </Modal>
+
+        </div>
       </section>
     </div>
 
