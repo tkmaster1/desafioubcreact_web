@@ -1,27 +1,33 @@
-import React, { createRef, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
+import "react-datepicker/dist/react-datepicker.css";
+
 import axios from 'axios';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 import moment from 'moment'
+import { format } from "date-fns";
 import InputMask from 'react-input-mask';
+import DatePicker, { registerLocale } from "react-datepicker";
+import ptBR from 'date-fns/locale/pt-BR';
+registerLocale('ptBR', ptBR);
 
 function App() {
 
   const [modalInclude, setModalInclude] = useState(false);
   const [modalEdit, setModalEdit] = useState(false);
   const [modalDelete, setModalDelete] = useState(false);
+  const baseUrl = "https://localhost:44392/api/students";
+  const [date, setDate] = useState(new Date());
 
-  //#region Listagem
-
-  const baseUrl = "https://localhost:44392/api/Students/";
+  //#region Listagem  
 
   const [dataStudants, setData] = useState([]);
   const fetchData = useCallback(() => {
     axios({
       "method": "GET",
-      "url": baseUrl + 'listall',
+      "url": baseUrl + '/listall',
       "headers": {}, "params": {}
     })
       .then((response) => {
@@ -58,7 +64,7 @@ function App() {
     dateBirth: ""
   })
 
-  const [error, setError] = useState({});
+  //const [error, setError] = useState({});
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -82,56 +88,63 @@ function App() {
     setModalInclude(!modalInclude);
   }
 
-  //const saveNewStudents = async () => {
-  const saveNewStudents = (event) => {
-    event.preventDefault();
+  const saveNewStudents = async () => {
+    //const saveNewStudents = (event) => {
+    //  event.preventDefault();
     delete objStudent.code;
     objStudent.name = objStudent.name;
     objStudent.age = parseInt(objStudent.age);
     objStudent.series = parseInt(objStudent.series);
 
-    var dateObject = formatDate(objStudent.dateBirth)
-    // console.log(dateObject)
-    objStudent.dateBirth = dateObject;
-    // console.log(objStudent);
+    var formattedDate = format(date, "yyyy-MM-dd'");
+    // console.log(formattedDate);
+    objStudent.dateBirth = formattedDate
+    //console.log(objStudent);
 
-    // setErrors(validateValues(objStudent));
+    //Exemplo de como tem que passar a data
+    // objStudent.dateBirth = "2012-08-21"
 
-    // await axios.post(baseUrl + 'include', objStudent)
-    //   .then(response => {
-    //     setData(dataStudants.concat(response.data));
-    //     fetchData();
-    //     openCloseModalInclude();
-    //   }).catch(error => {
-    //     console.log(error);
-    //   })
+    await axios.post(baseUrl + "/include", objStudent)
+      .then(response => {
+        setData(dataStudants.concat(response.data));
+        fetchData();
+        openCloseModalInclude();
+      }).catch(error => {
+        console.log(error);
+      })
   }
 
-  function formatDate(date) {
-    var d = new Date(date),
-      month = '' + (d.getMonth() + 1),
-      day = '' + d.getDate(),
-      year = d.getFullYear();
-
-    if (month.length < 2) month = '0' + month;
-    if (day.length < 2) day = '0' + day;
-
-    return [year, day, month].join('-');
-  }
-
-  const validateValues = (inputValues) => {
-    let errors = {};
-    if (inputValues.name.length < 2) {
-      errors.name = "O campo Nome é obrigatório.";
-    }
-    if (!inputValues.age || inputValues.age <= 0) {
-      errors.age = "O campo Idade é obrigatório.";
-    }
-    if (inputValues.dateBirth.length <= 0) {
-      errors.dateBirth = "O campo Data de nascimento é obrigatório.";
-    }
-    return errors;
+  const formatDate = (dateStr) => {
+    const [year, month, day] = dateStr.split('/');
+    let newDate = `${year}-${month}-${day}`;
+    return newDate;
   };
+
+  // function formatDate(date) {
+  //   var d = new Date(date),
+  //     month = '' + (d.getMonth() + 1),
+  //     day = '' + d.getDate(),
+  //     year = d.getFullYear();
+
+  //   if (month.length < 2) month = '0' + month;
+  //   if (day.length < 2) day = '0' + day;
+
+  //   return [year, day, month].join('-');
+  // }
+
+  // const validateValues = (inputValues) => {
+  //   let errors = {};
+  //   if (inputValues.name.length < 2) {
+  //     errors.name = "O campo Nome é obrigatório.";
+  //   }
+  //   if (!inputValues.age || inputValues.age <= 0) {
+  //     errors.age = "O campo Idade é obrigatório.";
+  //   }
+  //   if (inputValues.dateBirth.length <= 0) {
+  //     errors.dateBirth = "O campo Data de nascimento é obrigatório.";
+  //   }
+  //   return errors;
+  // };
 
   //#endregion
 
@@ -154,7 +167,12 @@ function App() {
     objStudent.age = parseInt(objStudent.age);
     objStudent.series = parseInt(objStudent.series);
 
-    await axios.put(baseUrl + 'edit', objStudent)
+    var formattedDate = format(date, "yyyy-MM-dd'");
+    //  console.log(formattedDate);
+    objStudent.dateBirth = formattedDate
+    // console.log(objStudent);
+
+    await axios.put(baseUrl + '/edit', objStudent)
       .then(response => {
         var resposta = response.data;
         var dadosAuxiliar = dataStudants;
@@ -191,7 +209,7 @@ function App() {
   }
 
   const saveRemoveStudents = async () => {
-    await axios.delete(baseUrl + 'delete/' + objStudent.code)
+    await axios.delete(baseUrl + '/delete/' + objStudent.code)
       .then(response => {
         setData(dataStudants.filter(stu => stu.code !== response.data));
         fetchData();
@@ -273,7 +291,7 @@ function App() {
                 )))
               ) : (
                 (<tr>
-                  <td className="text-center" colspan="12">Nenhum registro encontrado</td>
+                  <td className="text-center" colSpan={12}>Nenhum registro encontrado</td>
                 </tr>)
               )}
             </tbody>
@@ -287,107 +305,111 @@ function App() {
               <i className="bi bi-person-fill-add"></i>&nbsp;Cadastrar Estudante
             </ModalHeader>
             <ModalBody>
-              <form>
-                <div>
-                  <div className="form-group">
-                    <div className="row">
-                      <div className="col-md-8 mb-3">
-                        <label className="form-label">Nome <span className="text-danger">*</span></label>
-                        <div className="row row-space-10">
-                          <div className="col-12" >
-                            <div className="input-group ">
-                              <input type="text" className="form-control" placeholder="Nome" name="name" onChange={handleChange} minLength="2" maxLength="256" required />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="col-md-4 mb-3">
-                        <label className="form-label">Idade <span className="text-danger">*</span></label>
-                        <div className="row row-space-10">
-                          <div className="col-12" >
-                            <div className="input-group input-daterange " id="dataInclusaoNoticiaDiv">
-                              <input type="number" className="form-control" placeholder="Idade" name="age" onChange={handleChange} min="1" required />
-                            </div>
+
+              <div>
+                <div className="form-group">
+                  <div className="row">
+                    <div className="col-md-8 mb-3">
+                      <label className="form-label">Nome <span className="text-danger">*</span></label>
+                      <div className="row row-space-10">
+                        <div className="col-12" >
+                          <div className="input-group ">
+                            <input type="text" className="form-control" placeholder="Nome" name="name" onChange={handleChange} minLength="2" maxLength="256" required />
                           </div>
                         </div>
                       </div>
                     </div>
-
-                    <div className="row">
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label">Série</label>
-                        <div className="row row-space-10">
-                          <div className="col-12" >
-                            <input type="number" className="form-control " placeholder="Série" name="series" onChange={handleChange} />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label">Nota média</label>
-                        <div className="row row-space-10">
-                          <div className="col-12" >
-                            <input type="number" className="form-control " placeholder="nota média" step="0.01" name="averageGrade" onChange={handleChange} />
+                    <div className="col-md-4 mb-3">
+                      <label className="form-label">Idade <span className="text-danger">*</span></label>
+                      <div className="row row-space-10">
+                        <div className="col-12" >
+                          <div className="input-group input-daterange " id="dataInclusaoNoticiaDiv">
+                            <input type="number" className="form-control" placeholder="Idade" name="age" onChange={handleChange} min="1" required />
                           </div>
                         </div>
                       </div>
                     </div>
-
-                    <div className="row">
-                      <div className="col-md-8 mb-3">
-                        <label className="form-label">Endereço</label>
-                        <div className="row row-space-10">
-                          <div className="col-12" >
-                            <div className="input-group ">
-                              <input type="text" className="form-control" placeholder="Endereço" name="address" onChange={handleChange} maxLength="1000" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="col-md-4 mb-3">
-                        <label className="form-label">Data de nascimento <span className="text-danger">*</span></label>
-                        <div className="row row-space-10">
-                          <div className="col-12" >
-                            <div className="input-group input-daterange " id="dataNascimentoStudentsDiv">
-                              <InputMask className="form-control data"
-                                mask="99/99/9999"
-                                // maskChar="mm/dd/yyyy"
-                                placeholder="99/99/9999"
-                                onChange={handleChange}
-                                name="dateBirth" />
-                              <label className="input-group-text"><i className="bi bi-calendar-fill"></i></label>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="row">
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label">Nome do pai</label>
-                        <div className="row row-space-10">
-                          <div className="col-12" >
-                            <input type="text" className="form-control" placeholder="Nome do pai" name="fatherName" onChange={handleChange} minLength="2" maxLength="256" />
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="col-md-6 mb-3">
-                        <label className="form-label">Nome da mãe</label>
-                        <div className="row row-space-10">
-                          <div className="col-12" >
-                            <div className="input-group ">
-                              <input type="text" className="form-control" placeholder="Nome da mãe" name="motherName" onChange={handleChange} maxLength="256" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
                   </div>
+
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Série</label>
+                      <div className="row row-space-10">
+                        <div className="col-12" >
+                          <input type="number" className="form-control " placeholder="Série" name="series" onChange={handleChange} />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Nota média</label>
+                      <div className="row row-space-10">
+                        <div className="col-12" >
+                          <input type="number" className="form-control " placeholder="nota média" step="0.01" name="averageGrade" onChange={handleChange} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-8 mb-3">
+                      <label className="form-label">Endereço</label>
+                      <div className="row row-space-10">
+                        <div className="col-12" >
+                          <div className="input-group ">
+                            <input type="text" className="form-control" placeholder="Endereço" name="address" onChange={handleChange} maxLength="1000" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-md-4 mb-3">
+                      <label className="form-label">Data de nascimento <span className="text-danger">*</span></label>
+                      <div className="row row-space-10">
+                        <div className="col-12" >
+                          <div className="input-group input-daterange " id="dataNascimentoStudentsDiv">
+                            <main className="Sample__container__content">
+                              <DatePicker
+                                showIcon
+                                selected={date}
+                                dateFormat="dd/MM/yyyy"
+                                onChange={(date) => setDate(date)}
+                                locale={ptBR}
+                                className="form-control"
+                                name="dateBirth"
+                                icon="bi bi-calendar-fill" />
+                            </main>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Nome do pai</label>
+                      <div className="row row-space-10">
+                        <div className="col-12" >
+                          <input type="text" className="form-control" placeholder="Nome do pai" name="fatherName" onChange={handleChange} minLength="2" maxLength="256" />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Nome da mãe</label>
+                      <div className="row row-space-10">
+                        <div className="col-12" >
+                          <div className="input-group ">
+                            <input type="text" className="form-control" placeholder="Nome da mãe" name="motherName" onChange={handleChange} maxLength="256" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
-              </form>
+              </div>
+
             </ModalBody>
             <ModalFooter>
               <button className="btn btn-primary" onClick={() => saveNewStudents()}>Incluir</button>{"   "}
@@ -468,14 +490,17 @@ function App() {
                     <div className="row row-space-10">
                       <div className="col-12" >
                         <div className="input-group input-daterange " id="dataNascimentoStudentsDiv">
-                          <InputMask className="form-control data"
-                            mask="99/99/9999"
-                            placeholder="99/99/9999"
-                            value={objStudent ? moment(objStudent.dateBirth).format("DD/MM/YYYY") : ''}
-                            onChange={handleChange}
-                            name="dateBirth"
-                            slotChar="dd/mm/yyyy" preserveMask required />
-                          <label className="input-group-text" ><i className="bi bi-calendar-fill"></i></label>
+                          <main className="Sample__container__content">
+                            <DatePicker
+                              showIcon={true}
+                              selected={date}
+                              dateFormat="dd/MM/yyyy"
+                              onChange={(date) => setDate(date)}
+                              locale={ptBR}
+                              className="form-control"
+                              name="dateBirth"
+                              icon="bi bi-calendar-fill" />                            
+                          </main>                          
                         </div>
                       </div>
                     </div>
