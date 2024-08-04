@@ -1,40 +1,39 @@
-import React, { Component } from 'react'
+import React, { } from 'react'
 import 'admin-lte/dist/css/adminlte.min.css';
 import { BrowserRouter, Link, Route, Routes, Switch } from "react-router-dom";
 
 const Header = () => {
   return (
-    <BrowserRouter>
-      <nav className="main-header navbar navbar-expand-md navbar-light navbar-white">
-        <div className="container">
-          {/* <a href="../../index3.html" className="navbar-brand">
-            <img src="../../dist/img/logo192.png" alt="AdminLTE Logo" className="brand-image img-circle elevation-3" style={{ opacity: '.8', width: '45px' }} />
-            <span className="brand-text font-weight-light">Ddesafio UBC</span>
-          </a> */}
+    <nav className="main-header navbar navbar-expand navbar-dark navbar-navy">
+      <div className="container">
+        <BrowserRouter>
           <Link className="navbar-brand" to="/" onClick={() => {
             window.location.href = "/";
           }}>
-            <img src="../../dist/img/logo192.png" alt="AdminLTE Logo" className="brand-image img-circle elevation-3" style={{ opacity: '.8', width: '45px' }} />
-            <span className="brand-text font-weight-light">Ddesafio UBC</span>
+            <img src="../../dist/img/logo192.png" alt="AdminLTE Logo" className="brand-image img-circle elevation-3" style={{ opacity: '.8', width: '40px' }} />
+            <span className="brand-text font-weight-light">Desafio UBC</span>
           </Link>
-          <button class="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+          <button className="navbar-toggler order-1" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <span className="navbar-toggler-icon"></span>
           </button>
           {/* Left navbar links */}
           <ul className="navbar-nav">
             <li className="nav-item d-none d-sm-inline-block">
-              {/* <a href="index3.html" className="nav-link">Home</a> */}
               <Link className="nav-link" to="/" onClick={() => {
                 window.location.href = "/";
               }}>Home</Link>
             </li>
             <li className="nav-item d-none d-sm-inline-block">
-              {/* <a href="#" className="nav-link">Studants</a> */}
               <Link className="nav-link" to="/studants" onClick={() => {
                 window.location.href = "/studants";
               }}>Studants</Link>
             </li>
-          </ul>          
+            <li className="nav-item d-none d-sm-inline-block">
+              <Link className="nav-link" to="/form" onClick={() => {
+                window.location.href = "/form";
+              }}>Teste Modal</Link>
+            </li>
+          </ul>
           {/* Right navbar links */}
           <ul className="navbar-nav ml-auto">
             {/* Messages Dropdown Menu */}
@@ -121,11 +120,11 @@ const Header = () => {
                 <div className="dropdown-divider" />
                 <a href="#" className="dropdown-item dropdown-footer">See All Notifications</a>
               </div>
-            </li>            
+            </li>
           </ul>
-        </div>
-      </nav>
-    </BrowserRouter>
+        </BrowserRouter>
+      </div>
+    </nav>
   )
 }
 export default Header;

@@ -1,11 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
-//import './App.css';
+import { BrowserRouter, Link, Route, Routes, Switch } from "react-router-dom";
+
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
 import "react-datepicker/dist/react-datepicker.css";
 
 import axios from 'axios';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
+
+import { Form, Radio, Input, Button, Checkbox } from "antd";
+
 import moment from 'moment'
 import { format } from "date-fns";
 import InputMask from 'react-input-mask';
@@ -20,6 +24,7 @@ const Studant = () => {
   const [modalDelete, setModalDelete] = useState(false);
   const baseUrl = "https://localhost:44392/api/students";
   const [date, setDate] = useState(new Date());
+  const [errors, setErrors] = useState({});
 
   //#region Listagem  
 
@@ -52,6 +57,7 @@ const Studant = () => {
 
   //#region Inclusão
 
+  const toggle = () => setModalInclude(!modalInclude);
   const [objStudent, setStudentSelected] = useState({
     code: 0,
     name: "",
@@ -63,8 +69,6 @@ const Studant = () => {
     motherName: "",
     dateBirth: ""
   })
-
-  //const [error, setError] = useState({});
 
   const handleChange = e => {
     const { name, value } = e.target;
@@ -81,8 +85,6 @@ const Studant = () => {
 
     console.log(objStudent);
   }
-
-  const toggle = () => setModalInclude(!modalInclude);
 
   const openCloseModalInclude = () => {
     setModalInclude(!modalInclude);
@@ -114,38 +116,6 @@ const Studant = () => {
       })
   }
 
-  const formatDate = (dateStr) => {
-    const [year, month, day] = dateStr.split('/');
-    let newDate = `${year}-${month}-${day}`;
-    return newDate;
-  };
-
-  // function formatDate(date) {
-  //   var d = new Date(date),
-  //     month = '' + (d.getMonth() + 1),
-  //     day = '' + d.getDate(),
-  //     year = d.getFullYear();
-
-  //   if (month.length < 2) month = '0' + month;
-  //   if (day.length < 2) day = '0' + day;
-
-  //   return [year, day, month].join('-');
-  // }
-
-  // const validateValues = (inputValues) => {
-  //   let errors = {};
-  //   if (inputValues.name.length < 2) {
-  //     errors.name = "O campo Nome é obrigatório.";
-  //   }
-  //   if (!inputValues.age || inputValues.age <= 0) {
-  //     errors.age = "O campo Idade é obrigatório.";
-  //   }
-  //   if (inputValues.dateBirth.length <= 0) {
-  //     errors.dateBirth = "O campo Data de nascimento é obrigatório.";
-  //   }
-  //   return errors;
-  // };
-
   //#endregion
 
   //#region Alteração
@@ -168,9 +138,9 @@ const Studant = () => {
     objStudent.series = parseInt(objStudent.series);
 
     var formattedDate = format(date, "yyyy-MM-dd'");
-    //  console.log(formattedDate);
+    // console.log(formattedDate);
     objStudent.dateBirth = formattedDate
-    // console.log(objStudent);
+    //console.log(objStudent);
 
     await axios.put(baseUrl + '/edit', objStudent)
       .then(response => {
@@ -222,24 +192,29 @@ const Studant = () => {
   //#endregion
 
   return (
+
     <div className="content-wrapper">
-      {/* <div className="App">*/}
       {/* Content Header (Page header) */}
-      <div className="content-header">
-        <div className="container-fluid">
-          <div className="row mb-2">
-            <div className="col-sm-6">
-              <h1 className="m-0 text-dark">Studants</h1>
-            </div>{/* /.col */}
-            <div className="col-sm-6">
-              <ol className="breadcrumb float-sm-right">
-                <li className="breadcrumb-item"><a href="#">Home</a></li>
-                <li className="breadcrumb-item active">Studants</li>
-              </ol>
-            </div>{/* /.col */}
-          </div>{/* /.row */}
-        </div>{/* /.container-fluid */}
-      </div>
+      <BrowserRouter>
+        <div className="content-header">
+          <div className="container-fluid">
+            <div className="row mb-2">
+              <div className="col-sm-6">
+                <h1 className="m-0 text-dark">Studants</h1>
+              </div>{/* /.col */}
+              <div className="col-sm-6">
+                <ol className="breadcrumb float-sm-right">
+                  {/* <li className="breadcrumb-item"><a href="#">Home</a></li> */}
+                  <Link className="breadcrumb-item" to="/" onClick={() => {
+                    window.location.href = "/";
+                  }}>Home</Link>
+                  <li className="breadcrumb-item active">Studants</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </BrowserRouter>
       {/* /.content-header */}
       <section className="content">
         <div className="container-fluid">
@@ -251,7 +226,9 @@ const Studant = () => {
             <div className="card-tools">
               <a href="#" onClick={() => openCloseModalInclude()} data-bs-toggle="modal" className="btn btn-success btn-sm">
                 <i className="bi bi-plus-square" data-bs-toggle="tooltip" title="Incluir Estudante"></i>
-              </a>
+              </a>&nbsp;
+              <a href="# " data-toggle="modal" data-target="#RegFormModal" className="btn btn-success btn-sm">
+                Open Form Modal</a>
             </div><br />
           </div>
           <br />
@@ -305,8 +282,7 @@ const Studant = () => {
               <i className="bi bi-person-fill-add"></i>&nbsp;Cadastrar Estudante
             </ModalHeader>
             <ModalBody>
-
-              <div>
+              <form>
                 <div className="form-group">
                   <div className="row">
                     <div className="col-md-8 mb-3">
@@ -406,14 +382,12 @@ const Studant = () => {
                       </div>
                     </div>
                   </div>
-
                 </div>
-              </div>
-
+              </form>
             </ModalBody>
             <ModalFooter>
+              <button className="btn btn-secondary" onClick={() => openCloseModalInclude()}>Cancelar</button>
               <button className="btn btn-primary" onClick={() => saveNewStudents()}>Incluir</button>{"   "}
-              <button className="btn btn-danger" onClick={() => openCloseModalInclude()}>Cancelar</button>
             </ModalFooter>
           </Modal>
 
@@ -493,14 +467,14 @@ const Studant = () => {
                           <main className="Sample__container__content">
                             <DatePicker
                               showIcon={true}
-                              selected={date}
+                              selected={objStudent.dateBirth}
                               dateFormat="dd/MM/yyyy"
                               onChange={(date) => setDate(date)}
                               locale={ptBR}
                               className="form-control"
                               name="dateBirth"
-                              icon="bi bi-calendar-fill" />                            
-                          </main>                          
+                              icon="bi bi-calendar-fill" />
+                          </main>
                         </div>
                       </div>
                     </div>
@@ -556,8 +530,7 @@ const Studant = () => {
 
         </div>
       </section >
-    </div >
-
+    </div>
   )
 }
 

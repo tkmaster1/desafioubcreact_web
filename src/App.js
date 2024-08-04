@@ -9,12 +9,13 @@ import AppMain from './components/Main';
 function App() {
 
   return (
-    <div className="App">
+    <div className="wrapper">
       <AppHeader />
-      <AppMain />
-      {/* <AppHome /> */}
+      <div className="content-wrapper">
+        <AppMain />
+      </div> 
       <AppFooter />
-    </div>
+    </div >
   );
 }
 

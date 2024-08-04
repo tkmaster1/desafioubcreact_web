@@ -8,8 +8,13 @@ const Home = () => {
     const subTextoIndex = 'Aplicação de Front-End em React.js'
 
     return (
-        <div className="content-wrapper">
-            <div className="content">
+        <><div className="content-header">
+            <div className="container-fluid">
+                <div className="row mb-2">
+                    &nbsp;
+                </div>
+            </div>
+        </div><div className="content">
                 <div className="container">
                     <div className="row">
                         <div className="text-center">
@@ -19,29 +24,7 @@ const Home = () => {
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        // <div className="content-wrapper" >
-        //     {/* Content Header (Page header) */}
-        //     <div className="content-header">
-        //         <div className="container-fluid">
-        //             &nbsp;
-        //         </div>
-        //     </div>
-        //     <section className="content">
-        //         <div className="container-fluid">
-        //             <div className="row">
-        //                 <div className="col-lg-12">
-        //                     <div className="text-center">
-        //                         <h1 className="display-4">{welcome}</h1>
-        //                         <p>{textoIndex}</p>
-        //                         <p className="obrigatorio">{subTextoIndex}</p>
-        //                     </div>
-        //                 </div>
-        //             </div>
-        //         </div>
-        //     </section>           
-        // </div>       
+            </div></>
     );
 }
 
