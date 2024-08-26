@@ -1,9 +1,9 @@
 import React, { Component } from 'react'
-import { createBrowserRouter, RouterProvider, } from "react-router-dom"
+//import { createBrowserRouter, RouterProvider, } from "react-router-dom"
 
 import AppHeader from './components/Header';
 import AppFooter from './components/Footer';
-import AppHome from './components/Home';
+//import AppHome from './components/Home';
 import AppMain from './components/Main';
 
 function App() {
@@ -11,11 +11,11 @@ function App() {
   return (
     <div className="wrapper">
       <AppHeader />
-      <div className="content-wrapper">
+      {/* <div className="content-wrapper">         */}
         <AppMain />
-      </div> 
+      {/* </div>  */}
       <AppFooter />
-    </div >
+    </div>
   );
 }
 

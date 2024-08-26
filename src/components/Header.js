@@ -1,10 +1,10 @@
 import React, { } from 'react'
-import 'admin-lte/dist/css/adminlte.min.css';
+//import 'admin-lte/dist/css/adminlte.min.css';
 import { BrowserRouter, Link, Route, Routes, Switch } from "react-router-dom";
 
 const Header = () => {
-  return (
-    <nav className="main-header navbar navbar-expand navbar-dark navbar-navy">
+  return (  
+    <nav className="main-header navbar navbar-expand-md navbar-dark navbar-navy">
       <div className="container">
         <BrowserRouter>
           <Link className="navbar-brand" to="/" onClick={() => {

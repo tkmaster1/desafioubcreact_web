@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { BrowserRouter, Link, Route, Routes, Switch } from "react-router-dom";
+//import { BrowserRouter, Link, Route, Routes, Switch } from "react-router-dom";
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap-icons/font/bootstrap-icons.min.css'
@@ -8,23 +8,25 @@ import "react-datepicker/dist/react-datepicker.css";
 import axios from 'axios';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'reactstrap';
 
-import { Form, Radio, Input, Button, Checkbox } from "antd";
+//import { Form, Radio, Input, Button, Checkbox } from "antd";
 
 import moment from 'moment'
 import { format } from "date-fns";
-import InputMask from 'react-input-mask';
+//import InputMask from 'react-input-mask';
 import DatePicker, { registerLocale } from "react-datepicker";
 import ptBR from 'date-fns/locale/pt-BR';
+import AppMyBreadcrumb from '../components/MyBreadcrumb';
+
 registerLocale('ptBR', ptBR);
 
 const Studant = () => {
-
+//#region All 
   const [modalInclude, setModalInclude] = useState(false);
   const [modalEdit, setModalEdit] = useState(false);
   const [modalDelete, setModalDelete] = useState(false);
   const baseUrl = "https://localhost:44392/api/students";
   const [date, setDate] = useState(new Date());
-  const [errors, setErrors] = useState({});
+  //const [errors, setErrors] = useState({});
 
   //#region Listagem  
 
@@ -191,32 +193,13 @@ const Studant = () => {
 
   //#endregion
 
-  return (
+  //#endregion
 
-    <div className="content-wrapper">
-      {/* Content Header (Page header) */}
-      <BrowserRouter>
-        <div className="content-header">
-          <div className="container-fluid">
-            <div className="row mb-2">
-              <div className="col-sm-6">
-                <h1 className="m-0 text-dark">Studants</h1>
-              </div>{/* /.col */}
-              <div className="col-sm-6">
-                <ol className="breadcrumb float-sm-right">
-                  {/* <li className="breadcrumb-item"><a href="#">Home</a></li> */}
-                  <Link className="breadcrumb-item" to="/" onClick={() => {
-                    window.location.href = "/";
-                  }}>Home</Link>
-                  <li className="breadcrumb-item active">Studants</li>
-                </ol>
-              </div>
-            </div>
-          </div>
-        </div>
-      </BrowserRouter>
-      {/* /.content-header */}
-      <section className="content">
+  return (
+    <div>
+      <AppMyBreadcrumb />
+
+      <div className="content">
         <div className="container-fluid">
           <div className="card-header alert-dark">
             <h3 className="card-title">
@@ -529,8 +512,8 @@ const Studant = () => {
           </Modal>
 
         </div>
-      </section >
-    </div>
+      </div>
+    </div> 
   )
 }
 
